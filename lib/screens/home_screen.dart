@@ -23,6 +23,7 @@ import 'all_recurring_expenses.dart';
 import 'stock_market_screen.dart';
 import 'chat_rooms_screen.dart';
 import 'subscription_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -449,6 +450,37 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // Profile button
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => ProfileScreen()),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: FutureBuilder<Map<String, dynamic>?>(
+                                future: SupabaseService.getOrCreateCurrentUserProfile(),
+                                builder: (context, snapshot) {
+                                  final fullName = snapshot.data?['full_name'] ?? 'U';
+                                  return Text(
+                                    fullName.isNotEmpty ? fullName[0].toUpperCase() : 'U',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
                           IconButton(
                             icon: const Icon(Icons.settings, color: Colors.white),
                             onPressed: () {
