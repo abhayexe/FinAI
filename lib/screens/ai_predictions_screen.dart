@@ -213,13 +213,14 @@ class _AIPredictionsScreenState extends State<AIPredictionsScreen> {
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
+                          color: Theme.of(context).textTheme.titleLarge?.color,
                         ),
                       ),
                       Text(
                         prediction.description,
                         style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
+                          fontSize: 14,
+                          color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.8),
                         ),
                       ),
                     ],
@@ -271,13 +272,17 @@ class _AIPredictionsScreenState extends State<AIPredictionsScreen> {
                   children: [
                     Text(
                       'Current',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.8),
+                      ),
                     ),
                     Text(
                       currencyProvider.formatAmount(prediction.currentValue),
                       style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                   ],
@@ -311,13 +316,17 @@ class _AIPredictionsScreenState extends State<AIPredictionsScreen> {
                   children: [
                     Text(
                       'Predicted',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.8),
+                      ),
                     ),
                     Text(
                       currencyProvider.formatAmount(prediction.predictedValue),
                       style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                   ],
@@ -506,14 +515,22 @@ class _AIPredictionsScreenState extends State<AIPredictionsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Detailed Analysis',
+                                'AI Analysis',
                                 style: GoogleFonts.poppins(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
+                                  color: Theme.of(context).textTheme.titleLarge?.color,
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              _buildFormattedText(_rawPredictions),
+                              Text(
+                                _rawPredictions,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  height: 1.5,
+                                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                                ),
+                              ),
                             ],
                           ),
                         ),

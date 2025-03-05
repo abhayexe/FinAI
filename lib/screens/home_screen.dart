@@ -420,6 +420,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
+                            'FinAI',
+                            style: GoogleFonts.poppins(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
                             'Total Balance',
                             style: TextStyle(
                               fontSize: 14,
@@ -538,6 +547,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Color iconColor,
   ) {
     return Container(
+      width: MediaQuery.of(context).size.width * 0.43, // Set a fixed width based on screen size
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.1),
@@ -558,26 +568,29 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.white.withOpacity(0.8),
+          Expanded(  // Wrap in Expanded to prevent overflow
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                amount,
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                const SizedBox(height: 2),
+                Text(
+                  amount,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,  // Slightly smaller font size
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  overflow: TextOverflow.ellipsis,  // Add ellipsis if text is too long
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -726,13 +739,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
               ),
-              const SizedBox(width: 80), // Empty space for balance
-            ],
-          ),
-          // Fourth row with Premium Subscription button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
               _buildActionButton(
                 context,
                 'Premium\nAdvisor',
@@ -744,8 +750,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
               ),
-              const SizedBox(width: 80), // Empty space
-              const SizedBox(width: 80), // Empty space for balance
             ],
           ),
         ],

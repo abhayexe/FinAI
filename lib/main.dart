@@ -61,7 +61,7 @@ class MyApp extends StatelessWidget {
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           return MaterialApp(
-            title: 'Finance AI',
+            title: 'FinAI',
             debugShowCheckedModeBanner: false,
             theme: themeProvider.theme,
             home: SupabaseService.isAuthenticated ? HomeScreen() : AuthScreen(),

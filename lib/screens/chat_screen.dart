@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'dart:math' as math;
 import '../services/chat_service.dart';
 import '../services/supabase_service.dart';
 import '../widgets/user_avatar.dart';
@@ -27,6 +28,7 @@ class _ChatScreenState extends State<ChatScreen> {
   List<Map<String, dynamic>> _messages = [];
   bool _isLoading = true;
   Stream<List<Map<String, dynamic>>>? _messagesStream;
+  final Map<String, Color> _userColors = {};
 
   @override
   void initState() {
@@ -132,6 +134,30 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       );
     }
+  }
+
+  // Generate a consistent color for a user
+  Color _getUserColor(String userId) {
+    if (_userColors.containsKey(userId)) {
+      return _userColors[userId]!;
+    }
+    
+    // Current user always gets the primary color
+    if (userId == SupabaseService.currentUser?.id) {
+      return Theme.of(context).colorScheme.primary;
+    }
+    
+    // Generate a random but consistent color for this user
+    final random = math.Random(userId.hashCode);
+    final color = HSLColor.fromAHSL(
+      1.0,
+      random.nextDouble() * 360, // Random hue
+      0.8, // High saturation
+      0.5, // Medium lightness for good contrast with white text
+    ).toColor();
+    
+    _userColors[userId] = color;
+    return color;
   }
 
   @override
@@ -249,7 +275,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                       child: Card(
                                         color: isCurrentUser 
                                             ? Theme.of(context).colorScheme.primary
-                                            : Theme.of(context).cardColor,
+                                            : _getUserColor(message['user_id']),
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(16),
                                         ),
@@ -298,14 +324,14 @@ class _ChatScreenState extends State<ChatScreen> {
                                                       style: TextStyle(
                                                         fontWeight: FontWeight.bold,
                                                         fontSize: 12,
-                                                        color: isCurrentUser ? Colors.white.withOpacity(0.9) : Colors.grey.shade700,
+                                                        color: Colors.white.withOpacity(0.9),
                                                       ),
                                                     ),
                                                   ),
                                                 Text(
                                                   message['content'],
                                                   style: TextStyle(
-                                                    color: isCurrentUser ? Colors.white : null,
+                                                    color: Colors.white,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 4),
@@ -315,7 +341,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                                     formattedTime,
                                                     style: TextStyle(
                                                       fontSize: 10,
-                                                      color: isCurrentUser ? Colors.white.withOpacity(0.7) : Colors.grey,
+                                                      color: Colors.white.withOpacity(0.7),
                                                     ),
                                                   ),
                                                 ),

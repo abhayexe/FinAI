@@ -89,7 +89,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Finance AI',
+                    'FinAI',
                     style: GoogleFonts.poppins(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,

@@ -39,44 +39,41 @@ class _SpendingChartState extends State<SpendingChart> {
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
                   height: 200,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: PieChart(
-                          PieChartData(
-                            pieTouchData: PieTouchData(
-                              touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                                setState(() {
-                                  if (!event.isInterestedForInteractions ||
-                                      pieTouchResponse == null ||
-                                      pieTouchResponse.touchedSection == null) {
-                                    touchedIndex = -1;
-                                    return;
-                                  }
-                                  touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
-                                });
-                              },
-                            ),
-                            borderData: FlBorderData(show: false),
-                            sectionsSpace: 2,
-                            centerSpaceRadius: 40,
-                            sections: _getSections(categorySpending),
-                          ),
+                  child: Center(
+                    child: PieChart(
+                      PieChartData(
+                        pieTouchData: PieTouchData(
+                          touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                            setState(() {
+                              if (!event.isInterestedForInteractions ||
+                                  pieTouchResponse == null ||
+                                  pieTouchResponse.touchedSection == null) {
+                                touchedIndex = -1;
+                                return;
+                              }
+                              touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                            });
+                          },
                         ),
+                        borderData: FlBorderData(show: false),
+                        sectionsSpace: 2,
+                        centerSpaceRadius: 40,
+                        sections: _getSections(categorySpending),
                       ),
-                      const SizedBox(width: 16),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: _buildLegend(categorySpending),
-                      ),
-                    ],
+                    ),
                   ),
+                ),
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: 16.0,
+                  runSpacing: 8.0,
+                  children: _buildLegend(categorySpending),
                 ),
               ],
             ),
@@ -102,6 +99,7 @@ class _SpendingChartState extends State<SpendingChart> {
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
+                color: Theme.of(context).textTheme.titleLarge?.color,
               ),
             ),
             const SizedBox(height: 20),
@@ -114,7 +112,9 @@ class _SpendingChartState extends State<SpendingChart> {
                     Icon(
                       Icons.pie_chart,
                       size: 64,
-                      color: Colors.grey[400],
+                      color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.grey[400] 
+                        : Colors.grey[400],
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -122,14 +122,14 @@ class _SpendingChartState extends State<SpendingChart> {
                       style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Add transactions to see your spending chart',
                       style: TextStyle(
-                        color: Colors.grey[500],
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                     ),
                   ],
@@ -145,14 +145,14 @@ class _SpendingChartState extends State<SpendingChart> {
   List<PieChartSectionData> _getSections(Map<String, double> categorySpending) {
     final List<PieChartSectionData> sections = [];
     final List<Color> colors = [
-      Colors.orange,
-      Colors.blue,
-      Colors.purple,
-      Colors.red,
-      Colors.pink,
-      Colors.green,
-      Colors.indigo,
-      Colors.grey,
+      Colors.orange.shade400,
+      Colors.blue.shade400,
+      Colors.purple.shade400,
+      Colors.red.shade400,
+      Colors.pink.shade400,
+      Colors.green.shade400,
+      Colors.indigo.shade400,
+      Colors.grey.shade400,
     ];
 
     int i = 0;
@@ -184,14 +184,14 @@ class _SpendingChartState extends State<SpendingChart> {
   List<Widget> _buildLegend(Map<String, double> categorySpending) {
     final List<Widget> legendItems = [];
     final List<Color> colors = [
-      Colors.orange,
-      Colors.blue,
-      Colors.purple,
-      Colors.red,
-      Colors.pink,
-      Colors.green,
-      Colors.indigo,
-      Colors.grey,
+      Colors.orange.shade400,
+      Colors.blue.shade400,
+      Colors.purple.shade400,
+      Colors.red.shade400,
+      Colors.pink.shade400,
+      Colors.green.shade400,
+      Colors.indigo.shade400,
+      Colors.grey.shade400,
     ];
 
     int i = 0;
@@ -202,24 +202,42 @@ class _SpendingChartState extends State<SpendingChart> {
       final Color color = colors[i % colors.length];
 
       legendItems.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark 
+              ? Colors.grey[800] 
+              : Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color, width: 1.5),
+          ),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 12,
-                height: 12,
+                width: 10,
+                height: 10,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: color,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Text(
-                '$category ($percentage%)',
-                style: const TextStyle(
+                '$category',
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$percentage%',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: color.withOpacity(0.9),
                 ),
               ),
             ],

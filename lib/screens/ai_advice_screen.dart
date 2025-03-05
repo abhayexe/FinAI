@@ -133,6 +133,7 @@ class _AIAdviceScreenState extends State<AIAdviceScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
+                color: Theme.of(context).cardColor,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: _isLoading
@@ -149,7 +150,9 @@ class _AIAdviceScreenState extends State<AIAdviceScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _getInitialAdvice,
         tooltip: 'Get new advice',
-        child: Icon(Icons.refresh),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        child: const Icon(Icons.refresh),
       ),
     );
   }
@@ -215,13 +218,16 @@ class _AIAdviceScreenState extends State<AIAdviceScreen> {
         style: GoogleFonts.poppins(
           fontSize: 16,
           height: 1.5,
-          color: Colors.black87,
+          color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.9),
         ),
         children: segments.map((segment) {
           return TextSpan(
             text: segment['text'],
             style: TextStyle(
               fontWeight: segment['isBold'] ? FontWeight.bold : FontWeight.normal,
+              color: segment['isBold'] 
+                ? Theme.of(context).textTheme.titleMedium?.color 
+                : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.9),
             ),
           );
         }).toList(),

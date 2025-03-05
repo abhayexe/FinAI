@@ -57,7 +57,7 @@ class ChatService {
           .from('chat_messages')
           .select('*, user:profiles!chat_messages_user_id_fkey(full_name)')
           .eq('room_id', roomId)
-          .order('created_at');
+          .order('created_at', ascending: true);
       
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
@@ -100,7 +100,7 @@ class ChatService {
         .from('chat_messages')
         .stream(primaryKey: ['id'])
         .eq('room_id', roomId)
-        .order('created_at')
+        .order('created_at', ascending: true)
         .map((event) => List<Map<String, dynamic>>.from(event));
   }
   

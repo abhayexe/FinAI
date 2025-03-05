@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import '../providers/finance_provider.dart';
 import '../providers/currency_provider.dart';
+import '../screens/budget_details_screen.dart';
 
 class BudgetSummary extends StatelessWidget {
   const BudgetSummary({super.key});
@@ -71,10 +72,8 @@ class BudgetSummary extends StatelessWidget {
         final totalExpenses = financeData.getTotalExpenses();
         final remainingBudget = financeData.getRemainingBudget();
         final percentUsed = budget > 0 ? (totalExpenses / budget) : 0.0;
-        
-        // Ensure the percent is between 0 and 1
         final clampedPercent = percentUsed.clamp(0.0, 1.0);
-        
+
         return Card(
           elevation: 4,
           shape: RoundedRectangleBorder(
@@ -114,7 +113,9 @@ class BudgetSummary extends StatelessWidget {
                             'Used',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey[300]
+                                : Colors.grey[600],
                             ),
                           ),
                         ],
@@ -129,23 +130,23 @@ class BudgetSummary extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         _buildBudgetItem(
+                          context,
                           'Budget',
                           financeData.formatAmount(budget, currencyData),
-                          Icons.account_balance_wallet,
                           Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(height: 12),
                         _buildBudgetItem(
+                          context,
                           'Spent',
                           financeData.formatAmount(totalExpenses, currencyData),
-                          Icons.shopping_cart,
                           Colors.orange,
                         ),
                         const SizedBox(height: 12),
                         _buildBudgetItem(
+                          context,
                           'Remaining',
                           financeData.formatAmount(remainingBudget, currencyData),
-                          Icons.savings,
                           remainingBudget >= 0 ? Colors.green : Colors.red,
                         ),
                       ],
@@ -158,30 +159,46 @@ class BudgetSummary extends StatelessWidget {
                   children: [
                     ElevatedButton.icon(
                       icon: const Icon(Icons.edit, size: 16),
-                      label: const Text(
+                      label: Text(
                         'Update Budget',
-                        style: TextStyle(fontSize: 12),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
                       ),
                       onPressed: () => _showUpdateBudgetDialog(context, financeData, currencyData),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        minimumSize: const Size(100, 36),
+                        minimumSize: const Size(120, 36),
                       ),
                     ),
-                    TextButton.icon(
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
                       icon: const Icon(Icons.insights, size: 16),
-                      label: const Text(
+                      label: Text(
                         'View Details',
-                        style: TextStyle(fontSize: 12),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
                       ),
                       onPressed: () {
-                        // Navigate to detailed budget view (to be implemented)
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const BudgetDetailsScreen(),
+                          ),
+                        );
                       },
-                      style: TextButton.styleFrom(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        minimumSize: const Size(100, 36),
+                        minimumSize: const Size(120, 36),
                       ),
                     ),
                   ],
@@ -194,11 +211,11 @@ class BudgetSummary extends StatelessWidget {
     );
   }
 
-  Widget _buildBudgetItem(String label, String amount, IconData icon, Color color) {
+  Widget _buildBudgetItem(BuildContext context, String label, String value, Color color) {
     return Row(
       children: [
         Icon(
-          icon,
+          Icons.account_balance_wallet,
           color: color,
           size: 20,
         ),
@@ -209,16 +226,18 @@ class BudgetSummary extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
+                fontSize: 14,
+                color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[300]
+                  : Colors.grey[600],
               ),
             ),
             Text(
-              amount,
+              value,
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: color,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
           ],
@@ -313,7 +332,9 @@ class BudgetSummary extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 helperText: 'Available balance: ${currencyData.formatAmount(financeData.getBalance())}',
-                helperStyle: TextStyle(color: Colors.grey[600]),
+                helperStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[300]
+                  : Colors.grey[600]),
               ),
               onChanged: (value) {
                 final budget = double.tryParse(value.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0;
