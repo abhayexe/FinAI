@@ -26,6 +26,7 @@ Below are some screenshots of the Finance AI (FinAI) application showcasing its 
     <td><img src="screenshots/ss12.jpeg" alt="Screenshot 12" width="200"></td>
   </tr>
 </table>
+
 ## Features
 
 ### Core Features
