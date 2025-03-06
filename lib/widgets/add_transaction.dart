@@ -16,6 +16,7 @@ class _AddTransactionState extends State<AddTransaction> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
   String _selectedCategory = 'Food';
+  String _selectedIncomeCategory = 'Salary';
   final List<String> _categories = [
     'Food',
     'Transport',
@@ -26,8 +27,17 @@ class _AddTransactionState extends State<AddTransaction> {
     'Education',
     'Other'
   ];
+  final List<String> _incomeCategories = [
+    'Salary',
+    'Freelance',
+    'Investments',
+    'Gifts',
+    'Refunds',
+    'Other'
+  ];
   final _uuid = Uuid();
   DateTime _selectedDate = DateTime.now();
+  bool _isIncome = false; // Default to expense
 
   void _submitData() {
     final enteredTitle = _titleController.text;
@@ -43,7 +53,8 @@ class _AddTransactionState extends State<AddTransaction> {
         title: enteredTitle,
         amount: enteredAmount,
         date: _selectedDate,
-        category: _selectedCategory,
+        category: _isIncome ? _selectedIncomeCategory : _selectedCategory,
+        isIncome: _isIncome, // Set the transaction type
       ),
     );
 
@@ -145,7 +156,7 @@ class _AddTransactionState extends State<AddTransaction> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedCategory,
+                    value: _isIncome ? _selectedIncomeCategory : _selectedCategory,
                     decoration: InputDecoration(
                       labelText: 'Category',
                       prefixIcon: const Icon(Icons.category),
@@ -160,17 +171,109 @@ class _AddTransactionState extends State<AddTransaction> {
                         ),
                       ),
                     ),
-                    items: _categories.map((category) {
-                      return DropdownMenuItem(
-                        value: category,
-                        child: Text(category),
-                      );
-                    }).toList(),
+                    items: _isIncome
+                        ? _incomeCategories.map((category) {
+                            return DropdownMenuItem(
+                              value: category,
+                              child: Text(category),
+                            );
+                          }).toList()
+                        : _categories.map((category) {
+                            return DropdownMenuItem(
+                              value: category,
+                              child: Text(category),
+                            );
+                          }).toList(),
                     onChanged: (value) {
                       setState(() {
-                        _selectedCategory = value!;
+                        if (_isIncome) {
+                          _selectedIncomeCategory = value!;
+                        } else {
+                          _selectedCategory = value!;
+                        }
                       });
                     },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _isIncome = false;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color: !_isIncome
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.transparent,
+                                borderRadius: const BorderRadius.horizontal(
+                                  left: Radius.circular(11),
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Expense',
+                                  style: TextStyle(
+                                    color: !_isIncome
+                                        ? Theme.of(context).colorScheme.onPrimary
+                                        : Theme.of(context).colorScheme.onSurface,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _isIncome = true;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color: _isIncome
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.transparent,
+                                borderRadius: const BorderRadius.horizontal(
+                                  right: Radius.circular(11),
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Income',
+                                  style: TextStyle(
+                                    color: _isIncome
+                                        ? Theme.of(context).colorScheme.onPrimary
+                                        : Theme.of(context).colorScheme.onSurface,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

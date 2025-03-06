@@ -61,11 +61,11 @@ class AllTransactionsScreen extends StatelessWidget {
               _detailRow(
                 'Amount',
                 Text(
-                  financeData.formatAmount(transaction.amount, currencyData),
+                  financeData.formatTransactionAmount(transaction, currencyData),
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: transaction.amount < 0 ? Colors.red : Colors.green,
+                    color: transaction.isIncome ? Colors.green : Colors.red,
                   ),
                 ),
               ),
@@ -158,9 +158,9 @@ class AllTransactionsScreen extends StatelessWidget {
               ),
               const TextSpan(text: ' ('),
               TextSpan(
-                text: financeData.formatAmount(transaction.amount, currencyData),
+                text: financeData.formatTransactionAmount(transaction, currencyData),
                 style: TextStyle(
-                  color: transaction.amount < 0 ? Colors.red : Colors.green,
+                  color: transaction.isIncome ? Colors.green : Colors.red,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -244,10 +244,10 @@ class AllTransactionsScreen extends StatelessWidget {
                     style: GoogleFonts.poppins(),
                   ),
                   trailing: Text(
-                    financeData.formatAmount(transaction.amount, currencyData),
+                    financeData.formatTransactionAmount(transaction, currencyData),
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w600,
-                      color: transaction.amount < 0 ? Colors.red : Colors.green,
+                      color: transaction.isIncome ? Colors.green : Colors.red,
                     ),
                   ),
                   onTap: () => _showTransactionDetails(

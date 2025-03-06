@@ -10,6 +10,7 @@ class SubscriptionProvider with ChangeNotifier {
   
   bool get isLoading => _isLoading;
   bool get hasSubscription => _hasSubscription;
+  bool get isPremiumUser => _hasSubscription;
   Map<String, dynamic>? get subscriptionDetails => _subscriptionDetails;
   
   // Get subscription end date

@@ -7,6 +7,7 @@ class Transaction {
   final bool isRecurring;
   final int? recurringDay;
   final String? recurringFrequency;
+  final bool isIncome;
 
   Transaction({
     required this.id,
@@ -17,6 +18,7 @@ class Transaction {
     this.isRecurring = false,
     this.recurringDay,
     this.recurringFrequency,
+    this.isIncome = false,
   });
 
   // Convert Transaction to Map for storage
@@ -30,6 +32,7 @@ class Transaction {
       'isRecurring': isRecurring,
       'recurringDay': recurringDay,
       'recurringFrequency': recurringFrequency,
+      'isIncome': isIncome,
     };
   }
 
@@ -44,6 +47,7 @@ class Transaction {
       isRecurring: json['isRecurring'] as bool? ?? false,
       recurringDay: json['recurringDay'] as int?,
       recurringFrequency: json['recurringFrequency'] as String?,
+      isIncome: json['isIncome'] as bool? ?? false,
     );
   }
 
@@ -57,6 +61,7 @@ class Transaction {
     bool? isRecurring,
     int? recurringDay,
     String? recurringFrequency,
+    bool? isIncome,
   }) {
     return Transaction(
       id: id ?? this.id,
@@ -67,6 +72,7 @@ class Transaction {
       isRecurring: isRecurring ?? this.isRecurring,
       recurringDay: recurringDay ?? this.recurringDay,
       recurringFrequency: recurringFrequency ?? this.recurringFrequency,
+      isIncome: isIncome ?? this.isIncome,
     );
   }
 }

@@ -11,6 +11,8 @@ import '../widgets/spending_chart.dart';
 import '../widgets/recurring_expense_dialog.dart';
 import '../widgets/recurring_expense_edit_dialog.dart';
 import '../widgets/loan_details_dialog.dart';
+import '../widgets/investment_list.dart';
+import '../widgets/add_investment.dart';
 import '../services/supabase_service.dart';
 import 'ai_advice_screen.dart';
 import 'bank_connection_screen.dart';
@@ -154,6 +156,49 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   children: [
                     _buildHeader(context),
+                    const SizedBox(height: 24),
+                    // Premium subscription button
+                    Consumer<SubscriptionProvider>(
+                      builder: (context, subscriptionProvider, _) {
+                        final isPremium = subscriptionProvider.isPremiumUser;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: ElevatedButton(
+                            onPressed: isPremium 
+                                ? null 
+                                : () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (_) => SubscriptionScreen()),
+                                    );
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isPremium ? Colors.green.shade700 : Colors.amber.shade700,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 4,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(isPremium ? Icons.verified : Icons.workspace_premium, size: 24),
+                                const SizedBox(width: 12),
+                                Text(
+                                  isPremium ? 'You are a Premium User' : 'Upgrade to Premium',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 24),
                     _buildQuickActions(context),
                     Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -162,6 +207,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: SpendingChart(),
+                    ),
+                    Consumer<FinanceProvider>(
+                      builder: (context, financeData, _) {
+                        final investments = financeData.getRecentInvestments();
+                        if (investments.isNotEmpty) {
+                          return InvestmentList(
+                            investments: investments,
+                            showHeader: true,
+                            isCompact: true,
+                          );
+                        } else {
+                          return const SizedBox.shrink();
+                        }
+                      },
                     ),
                     Consumer<FinanceProvider>(
                       builder: (context, financeData, _) {
@@ -391,6 +450,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final totalBalance = financeData.getBalance();
         final totalExpenses = financeData.getTotalExpenses();
         final totalIncome = financeData.income;
+        final transactionIncome = financeData.getTotalIncome();
 
         return Container(
           width: double.infinity,
@@ -417,36 +477,40 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'FinAI',
-                            style: GoogleFonts.poppins(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'FinAI',
+                              style: GoogleFonts.poppins(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Total Balance',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white.withOpacity(0.8),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Total Balance',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white.withOpacity(0.8),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            currencyProvider.formatAmount(totalBalance),
-                            style: GoogleFonts.poppins(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                            const SizedBox(height: 4),
+                            Text(
+                              currencyProvider.formatAmount(totalBalance),
+                              style: GoogleFonts.poppins(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -744,16 +808,25 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16), // Add spacing for the third row
-          // Third row with Stock Market button
+          const SizedBox(height: 16), // Add spacing between rows
+          // Third row with 3 buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildActionButton(
                 context,
-                'Stock\nMarket',
-                Icons.show_chart,
+                'Investments',
+                Icons.account_balance_wallet,
                 Colors.indigo,
+                () {
+                  _showAddInvestmentDialog(context);
+                },
+              ),
+              _buildActionButton(
+                context,
+                'Stocks',
+                Icons.show_chart,
+                Colors.blue.shade800,
                 () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => StockMarketScreen()),
@@ -762,23 +835,12 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               _buildActionButton(
                 context,
-                'Chat\nRooms',
+                'Chat',
                 Icons.chat,
                 Colors.pink,
                 () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => ChatRoomsScreen()),
-                  );
-                },
-              ),
-              _buildActionButton(
-                context,
-                'Premium\nAdvisor',
-                Icons.workspace_premium,
-                Colors.amber.shade700,
-                () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => SubscriptionScreen()),
                   );
                 },
               ),
@@ -826,6 +888,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showAddInvestmentDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const AddInvestmentDialog(),
     );
   }
 
