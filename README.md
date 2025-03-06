@@ -2,6 +2,30 @@
 
 A comprehensive finance management application built with Flutter, featuring AI-powered insights, transaction tracking, and stock market monitoring.
 
+## Screenshots
+
+Below are some screenshots of the Finance AI (FinAI) application showcasing its features:
+
+<table>
+  <tr>
+    <td><img src="screenshots/ss1.jpeg" alt="Screenshot 1" width="200"></td>
+    <td><img src="screenshots/ss2.jpeg" alt="Screenshot 2" width="200"></td>
+    <td><img src="screenshots/ss3.jpeg" alt="Screenshot 3" width="200"></td>
+    <td><img src="screenshots/ss4.jpeg" alt="Screenshot 4" width="200"></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/ss5.jpeg" alt="Screenshot 5" width="200"></td>
+    <td><img src="screenshots/ss6.jpeg" alt="Screenshot 6" width="200"></td>
+    <td><img src="screenshots/ss7.jpeg" alt="Screenshot 7" width="200"></td>
+    <td><img src="screenshots/ss8.jpeg" alt="Screenshot 8" width="200"></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/ss9.jpeg" alt="Screenshot 9" width="200"></td>
+    <td><img src="screenshots/ss10.jpeg" alt="Screenshot 10" width="200"></td>
+    <td><img src="screenshots/ss11.jpeg" alt="Screenshot 11" width="200"></td>
+    <td><img src="screenshots/ss12.jpeg" alt="Screenshot 12" width="200"></td>
+  </tr>
+</table>
 ## Features
 
 ### Core Features
