@@ -24,7 +24,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final ChatService _chatService = ChatService();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  
+
   List<Map<String, dynamic>> _messages = [];
   bool _isLoading = true;
   Stream<List<Map<String, dynamic>>>? _messagesStream;
@@ -55,7 +55,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages = messages;
         _isLoading = false;
       });
-      
+
       // Scroll to bottom after messages load
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
@@ -85,7 +85,7 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _messages = messages;
       });
-      
+
       // Scroll to bottom when new messages arrive
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
@@ -110,7 +110,7 @@ class _ChatScreenState extends State<ChatScreen> {
         roomId: widget.roomId,
         content: messageText,
       );
-      
+
       // No need to update state manually as we're subscribed to changes
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -141,12 +141,12 @@ class _ChatScreenState extends State<ChatScreen> {
     if (_userColors.containsKey(userId)) {
       return _userColors[userId]!;
     }
-    
+
     // Current user always gets the primary color
     if (userId == SupabaseService.currentUser?.id) {
       return Theme.of(context).colorScheme.primary;
     }
-    
+
     // Generate a random but consistent color for this user
     final random = math.Random(userId.hashCode);
     final color = HSLColor.fromAHSL(
@@ -155,7 +155,7 @@ class _ChatScreenState extends State<ChatScreen> {
       0.8, // High saturation
       0.5, // Medium lightness for good contrast with white text
     ).toColor();
-    
+
     _userColors[userId] = color;
     return color;
   }
@@ -163,7 +163,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUserId = SupabaseService.currentUser?.id;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -220,26 +220,34 @@ class _ChatScreenState extends State<ChatScreen> {
                         itemCount: _messages.length,
                         itemBuilder: (context, index) {
                           final message = _messages[index];
-                          final isCurrentUser = message['user_id'] == currentUserId;
-                          final userName = message['user']?['full_name'] ?? 'Unknown';
-                          final messageTime = DateTime.parse(message['created_at']);
-                          final formattedTime = DateFormat.jm().format(messageTime);
-                          final formattedDate = DateFormat.yMMMd().format(messageTime);
-                          
+                          final isCurrentUser =
+                              message['user_id'] == currentUserId;
+                          final userName =
+                              message['user']?['full_name'] ?? 'Unknown';
+                          final messageTime =
+                              DateTime.parse(message['created_at']);
+                          final formattedTime =
+                              DateFormat.jm().format(messageTime);
+                          final formattedDate =
+                              DateFormat.yMMMd().format(messageTime);
+
                           // Show date header if this is the first message or if the date is different from the previous message
-                          final showDateHeader = index == 0 || 
-                              DateFormat.yMd().format(DateTime.parse(_messages[index - 1]['created_at'])) != 
-                              DateFormat.yMd().format(messageTime);
-                          
+                          final showDateHeader = index == 0 ||
+                              DateFormat.yMd().format(DateTime.parse(
+                                      _messages[index - 1]['created_at'])) !=
+                                  DateFormat.yMd().format(messageTime);
+
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               if (showDateHeader)
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
                                   child: Center(
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 8),
                                       decoration: BoxDecoration(
                                         color: Colors.grey.shade200,
                                         borderRadius: BorderRadius.circular(16),
@@ -255,7 +263,9 @@ class _ChatScreenState extends State<ChatScreen> {
                                   ),
                                 ),
                               Align(
-                                alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
+                                alignment: isCurrentUser
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -270,61 +280,85 @@ class _ChatScreenState extends State<ChatScreen> {
                                     ],
                                     ConstrainedBox(
                                       constraints: BoxConstraints(
-                                        maxWidth: MediaQuery.of(context).size.width * 0.7,
+                                        maxWidth:
+                                            MediaQuery.of(context).size.width *
+                                                0.7,
                                       ),
                                       child: Card(
-                                        color: isCurrentUser 
-                                            ? Theme.of(context).colorScheme.primary
+                                        color: isCurrentUser
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .primary
                                             : _getUserColor(message['user_id']),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
                                         ),
                                         elevation: 1,
-                                        margin: const EdgeInsets.symmetric(vertical: 4),
+                                        margin: const EdgeInsets.symmetric(
+                                            vertical: 4),
                                         child: InkWell(
-                                          onLongPress: isCurrentUser 
+                                          onLongPress: isCurrentUser
                                               ? () {
                                                   showDialog(
                                                     context: context,
-                                                    builder: (context) => AlertDialog(
-                                                      title: const Text('Delete Message'),
-                                                      content: const Text('Are you sure you want to delete this message?'),
+                                                    builder: (context) =>
+                                                        AlertDialog(
+                                                      title: const Text(
+                                                          'Delete Message'),
+                                                      content: const Text(
+                                                          'Are you sure you want to delete this message?'),
                                                       actions: [
                                                         TextButton(
-                                                          onPressed: () => Navigator.pop(context),
-                                                          child: const Text('Cancel'),
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                  context),
+                                                          child: const Text(
+                                                              'Cancel'),
                                                         ),
                                                         ElevatedButton(
                                                           onPressed: () {
-                                                            Navigator.pop(context);
-                                                            _deleteMessage(message['id']);
+                                                            Navigator.pop(
+                                                                context);
+                                                            _deleteMessage(
+                                                                message['id']);
                                                           },
-                                                          style: ElevatedButton.styleFrom(
-                                                            backgroundColor: Colors.red,
-                                                            foregroundColor: Colors.white,
+                                                          style: ElevatedButton
+                                                              .styleFrom(
+                                                            backgroundColor:
+                                                                Colors.red,
+                                                            foregroundColor:
+                                                                Colors.white,
                                                           ),
-                                                          child: const Text('Delete'),
+                                                          child: const Text(
+                                                              'Delete'),
                                                         ),
                                                       ],
                                                     ),
                                                   );
                                                 }
                                               : null,
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
                                           child: Padding(
                                             padding: const EdgeInsets.all(12),
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 if (!isCurrentUser)
                                                   Padding(
-                                                    padding: const EdgeInsets.only(bottom: 4),
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            bottom: 4),
                                                     child: Text(
                                                       userName,
                                                       style: TextStyle(
-                                                        fontWeight: FontWeight.bold,
+                                                        fontWeight:
+                                                            FontWeight.bold,
                                                         fontSize: 12,
-                                                        color: Colors.white.withOpacity(0.9),
+                                                        color: Colors.white
+                                                            .withOpacity(0.9),
                                                       ),
                                                     ),
                                                   ),
@@ -336,12 +370,14 @@ class _ChatScreenState extends State<ChatScreen> {
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Align(
-                                                  alignment: Alignment.bottomRight,
+                                                  alignment:
+                                                      Alignment.bottomRight,
                                                   child: Text(
                                                     formattedTime,
                                                     style: TextStyle(
                                                       fontSize: 10,
-                                                      color: Colors.white.withOpacity(0.7),
+                                                      color: Colors.white
+                                                          .withOpacity(0.7),
                                                     ),
                                                   ),
                                                 ),

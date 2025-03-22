@@ -4,12 +4,21 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import '../providers/finance_provider.dart';
 import '../providers/currency_provider.dart';
+import '../providers/goals_provider.dart';
+import '../models/financial_goal.dart';
 import '../screens/budget_details_screen.dart';
+import '../screens/goals_screen.dart';
 
-class BudgetSummary extends StatelessWidget {
+class BudgetSummary extends StatefulWidget {
   const BudgetSummary({super.key});
 
-  void _showWarningDialog(BuildContext context, String message, VoidCallback onContinue) {
+  @override
+  _BudgetSummaryState createState() => _BudgetSummaryState();
+}
+
+class _BudgetSummaryState extends State<BudgetSummary> {
+  void _showWarningDialog(
+      BuildContext context, String message, VoidCallback onContinue) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -113,9 +122,10 @@ class BudgetSummary extends StatelessWidget {
                             'Used',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Theme.of(context).brightness == Brightness.dark
-                                ? Colors.grey[300]
-                                : Colors.grey[600],
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.grey[300]
+                                  : Colors.grey[600],
                             ),
                           ),
                         ],
@@ -146,7 +156,8 @@ class BudgetSummary extends StatelessWidget {
                         _buildBudgetItem(
                           context,
                           'Remaining',
-                          financeData.formatAmount(remainingBudget, currencyData),
+                          financeData.formatAmount(
+                              remainingBudget, currencyData),
                           remainingBudget >= 0 ? Colors.green : Colors.red,
                         ),
                       ],
@@ -167,11 +178,13 @@ class BudgetSummary extends StatelessWidget {
                           color: Colors.white,
                         ),
                       ),
-                      onPressed: () => _showUpdateBudgetDialog(context, financeData, currencyData),
+                      onPressed: () => _showUpdateBudgetDialog(
+                          context, financeData, currencyData),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
                         minimumSize: const Size(120, 36),
                       ),
                     ),
@@ -197,8 +210,64 @@ class BudgetSummary extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
                         minimumSize: const Size(120, 36),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.flag, size: 16),
+                      label: Text(
+                        'Set Goals',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                      onPressed: () => _showSetGoalsDialog(
+                          context, financeData, currencyData),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            Theme.of(context).colorScheme.secondary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        minimumSize: const Size(140, 36),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.list_alt, size: 16),
+                      label: Text(
+                        'View Goals',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const GoalsScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            Theme.of(context).colorScheme.secondary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        minimumSize: const Size(140, 36),
                       ),
                     ),
                   ],
@@ -211,7 +280,8 @@ class BudgetSummary extends StatelessWidget {
     );
   }
 
-  Widget _buildBudgetItem(BuildContext context, String label, String value, Color color) {
+  Widget _buildBudgetItem(
+      BuildContext context, String label, String value, Color color) {
     return Row(
       children: [
         Icon(
@@ -228,8 +298,8 @@ class BudgetSummary extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.grey[300]
-                  : Colors.grey[600],
+                    ? Colors.grey[300]
+                    : Colors.grey[600],
               ),
             ),
             Text(
@@ -256,7 +326,8 @@ class BudgetSummary extends StatelessWidget {
     }
   }
 
-  void _showUpdateBudgetDialog(BuildContext context, FinanceProvider financeData, CurrencyProvider currencyData) {
+  void _showUpdateBudgetDialog(BuildContext context,
+      FinanceProvider financeData, CurrencyProvider currencyData) {
     final TextEditingController budgetController = TextEditingController(
       text: financeData.budget.toString(),
     );
@@ -265,10 +336,14 @@ class BudgetSummary extends StatelessWidget {
     );
 
     void updateValues() {
-      final newBudget = double.tryParse(budgetController.text.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0;
-      final newIncome = double.tryParse(incomeController.text.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0;
+      final newBudget = double.tryParse(
+              budgetController.text.replaceAll(RegExp(r'[^\d.]'), '')) ??
+          0.0;
+      final newIncome = double.tryParse(
+              incomeController.text.replaceAll(RegExp(r'[^\d.]'), '')) ??
+          0.0;
       final balance = financeData.getBalance();
-      
+
       // Check if budget exceeds balance
       if (newBudget > balance) {
         _showErrorDialog(
@@ -277,7 +352,7 @@ class BudgetSummary extends StatelessWidget {
         );
         return;
       }
-      
+
       // Check if budget exceeds income
       if (newBudget > newIncome) {
         _showWarningDialog(
@@ -310,7 +385,8 @@ class BudgetSummary extends StatelessWidget {
           children: [
             TextField(
               controller: incomeController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                 labelText: 'Monthly Income',
                 prefixIcon: const Icon(Icons.attach_money),
@@ -323,7 +399,8 @@ class BudgetSummary extends StatelessWidget {
             const SizedBox(height: 16),
             TextField(
               controller: budgetController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                 labelText: 'Monthly Budget',
                 prefixIcon: const Icon(Icons.account_balance_wallet),
@@ -331,20 +408,27 @@ class BudgetSummary extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                helperText: 'Available balance: ${currencyData.formatAmount(financeData.getBalance())}',
-                helperStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.grey[300]
-                  : Colors.grey[600]),
+                helperText:
+                    'Available balance: ${currencyData.formatAmount(financeData.getBalance())}',
+                helperStyle: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey[300]
+                        : Colors.grey[600]),
               ),
               onChanged: (value) {
-                final budget = double.tryParse(value.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0;
-                final income = double.tryParse(incomeController.text.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0;
+                final budget =
+                    double.tryParse(value.replaceAll(RegExp(r'[^\d.]'), '')) ??
+                        0.0;
+                final income = double.tryParse(incomeController.text
+                        .replaceAll(RegExp(r'[^\d.]'), '')) ??
+                    0.0;
                 final balance = financeData.getBalance();
 
                 if (budget > balance) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Error: Budget cannot exceed available balance'),
+                      content:
+                          Text('Error: Budget cannot exceed available balance'),
                       backgroundColor: Colors.red,
                       duration: Duration(seconds: 2),
                     ),
@@ -376,6 +460,221 @@ class BudgetSummary extends StatelessWidget {
             child: Text('Update'),
           ),
         ],
+      ),
+    );
+  }
+
+  // Show dialog to set financial goals
+  void _showSetGoalsDialog(BuildContext context, FinanceProvider financeData,
+      CurrencyProvider currencyData) {
+    final TextEditingController titleController = TextEditingController();
+    final TextEditingController descriptionController = TextEditingController();
+    final TextEditingController amountController = TextEditingController();
+
+    // Initial values for the date picker
+    final now = DateTime.now();
+    DateTime targetDate = DateTime(
+        now.year, now.month + 3, now.day); // Default: 3 months from now
+
+    // Default colors for goal selection
+    final List<Color> goalColors = [
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.purple,
+      Colors.red,
+      Colors.teal,
+    ];
+
+    Color selectedColor = goalColors.first;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text(
+              'Set Financial Goal',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: titleController,
+                    decoration: InputDecoration(
+                      labelText: 'Goal Title',
+                      hintText: 'e.g., New Car, Pay Off Loan',
+                      prefixIcon: const Icon(Icons.title),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: descriptionController,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      labelText: 'Description',
+                      hintText: 'Describe your financial goal',
+                      prefixIcon: const Icon(Icons.description),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: amountController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Target Amount',
+                      prefixIcon: const Icon(Icons.attach_money),
+                      prefixText: currencyData.selectedSymbol,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  InkWell(
+                    onTap: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: targetDate,
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime(now.year + 10),
+                      );
+                      if (picked != null && picked != targetDate) {
+                        setState(() {
+                          targetDate = picked;
+                        });
+                      }
+                    },
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Target Date',
+                        prefixIcon: const Icon(Icons.calendar_today),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        '${targetDate.day}/${targetDate.month}/${targetDate.year}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Goal Color:',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 10,
+                    children: goalColors.map((color) {
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedColor = color;
+                          });
+                        },
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
+                            border: color == selectedColor
+                                ? Border.all(color: Colors.white, width: 2)
+                                : null,
+                            boxShadow: color == selectedColor
+                                ? [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      blurRadius: 5,
+                                      spreadRadius: 1,
+                                    )
+                                  ]
+                                : null,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  // Validate inputs
+                  if (titleController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Please enter a goal title')),
+                    );
+                    return;
+                  }
+
+                  final amount = double.tryParse(
+                      amountController.text.replaceAll(RegExp(r'[^\d.]'), ''));
+                  if (amount == null || amount <= 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Please enter a valid amount')),
+                    );
+                    return;
+                  }
+
+                  // Create the goal object
+                  final goal = FinancialGoal(
+                    title: titleController.text,
+                    description: descriptionController.text.isEmpty
+                        ? 'No description provided'
+                        : descriptionController.text,
+                    targetAmount: amount,
+                    targetDate: targetDate,
+                    color: selectedColor,
+                  );
+
+                  // Add the goal using the provider
+                  final goalsProvider =
+                      Provider.of<GoalsProvider>(context, listen: false);
+                  goalsProvider.addGoal(goal, context);
+
+                  // Show success message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          'Financial goal "${goal.title}" added successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+
+                  Navigator.of(context).pop();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Add Goal'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

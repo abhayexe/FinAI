@@ -7,7 +7,8 @@ class GeminiService {
   late final GenerativeModel _model;
 
   GeminiService() {
-    final apiKey = dotenv.env['GEMINI_API_KEY'] ?? 'AIzaSyARiGMhrYFP4ebAPhTAamHgc5TVUUkrB7M';
+    final apiKey = dotenv.env['GEMINI_API_KEY'] ??
+        'AIzaSyARiGMhrYFP4ebAPhTAamHgc5TVUUkrB7M';
     _model = GenerativeModel(
       model: 'gemini-1.5-flash',
       apiKey: apiKey,
@@ -31,7 +32,8 @@ class GeminiService {
       }
 
       // Calculate recurring total
-      final recurringTotal = recurringExpenses.fold(0.0, (sum, tx) => sum + tx.amount);
+      final recurringTotal =
+          recurringExpenses.fold(0.0, (sum, tx) => sum + tx.amount);
 
       // Format for prompt
       final categorySpendingText = categorySpending.entries
@@ -39,7 +41,8 @@ class GeminiService {
           .join('\n');
 
       final recurringText = recurringExpenses
-          .map((tx) => '- ${tx.title}: ${currencyProvider.formatAmount(tx.amount)} (${tx.recurringFrequency})')
+          .map((tx) =>
+              '- ${tx.title}: ${currencyProvider.formatAmount(tx.amount)} (${tx.recurringFrequency})')
           .join('\n');
 
       String prompt = '''
@@ -67,7 +70,7 @@ Format the response in a clear, structured way with bullet points.
 
       final content = [Content.text(prompt)];
       final response = await _model.generateContent(content);
-      
+
       return response.text ?? 'Unable to generate predictions at this time.';
     } catch (e) {
       return 'Error generating predictions: ${e.toString()}';
@@ -83,43 +86,52 @@ Format the response in a clear, structured way with bullet points.
     String? specificQuestion,
   }) async {
     try {
-      // Create category spending map from transactions
-      final Map<String, double> categorySpending = {};
-      for (var transaction in transactions) {
-        final category = transaction.category;
-        final amount = transaction.amount;
-        categorySpending[category] = (categorySpending[category] ?? 0) + amount;
+      String prompt = specificQuestion ?? '''
+      As a financial advisor, please analyze my financial data and provide advice:
+
+      Monthly Income: ${currencyProvider.formatAmount(income)}
+      Monthly Budget: ${currencyProvider.formatAmount(budget)}
+      Total Expenses: ${currencyProvider.formatAmount(expenses)}
+
+      ${transactions.isNotEmpty ? 'Recent Transactions:' : 'No recent transactions available.'}
+      ''';
+
+      if (transactions.isNotEmpty) {
+        // Add transactions info to the prompt
+        // Group transactions by category
+        Map<String, List<Transaction>> transactionsByCategory = {};
+        for (var tx in transactions) {
+          if (!transactionsByCategory.containsKey(tx.category)) {
+            transactionsByCategory[tx.category] = [];
+          }
+          transactionsByCategory[tx.category]!.add(tx);
+        }
+
+        // Calculate and add total amounts per category
+        transactionsByCategory.forEach((category, txList) {
+          final totalAmount = txList.fold<double>(
+              0, (sum, tx) => sum + (tx.isIncome ? -tx.amount : tx.amount));
+          prompt += '\n$category: ${currencyProvider.formatAmount(totalAmount)}';
+        });
       }
 
-      // Format category spending for prompt
-      final categorySpendingText = categorySpending.entries
-          .map((e) => '- ${e.key}: ${currencyProvider.formatAmount(e.value)}')
-          .join('\n');
+      prompt += '''
 
-      // Create prompt based on financial data
-      String prompt = '''
-You are a financial advisor AI. Based on the following financial information, provide personalized financial advice:
+      ${specificQuestion != null ? '' : 'Please provide:'}
+      ${specificQuestion != null ? '' : '1. Analysis of my spending habits'}
+      ${specificQuestion != null ? '' : '2. Specific suggestions to improve my financial situation'}
+      ${specificQuestion != null ? '' : '3. Budget optimization recommendations'}
+      ''';
 
-Monthly Income: ${currencyProvider.formatAmount(income)}
-Monthly Budget: ${currencyProvider.formatAmount(budget)}
-Total Monthly Expenses: ${currencyProvider.formatAmount(expenses)}
-Remaining Budget: ${currencyProvider.formatAmount(budget - expenses)}
-Overall Balance: ${currencyProvider.formatAmount(income - expenses)}
-
-Recent Transactions by Category:
-$categorySpendingText
-
-${specificQuestion != null ? 'The user has a specific question: $specificQuestion' : 'Provide general financial advice based on the spending patterns and suggest ways to improve financial health.'}
-
-Please provide actionable advice that is specific to this financial situation. Include suggestions for budgeting, saving, and potential areas to reduce spending if necessary.
-''';
-
-      final content = [Content.text(prompt)];
-      final response = await _model.generateContent(content);
+      print('Gemini Prompt: $prompt');
+      final response = await _model.generateContent([Content.text(prompt)]);
+      final responseText = response.text ?? 'Error: Unable to get a response';
+      print('Gemini Response: $responseText');
       
-      return response.text ?? 'Unable to generate financial advice at this time.';
+      return responseText;
     } catch (e) {
-      return 'Error generating financial advice: ${e.toString()}';
+      print('Gemini API Error: $e');
+      return 'There was an error getting financial advice: ${e.toString()}';
     }
   }
 }

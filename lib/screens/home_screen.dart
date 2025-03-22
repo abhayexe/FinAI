@@ -3,7 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/finance_provider.dart';
 import '../providers/currency_provider.dart';
+import '../providers/theme_provider.dart';
 import '../providers/subscription_provider.dart';
+import '../providers/goals_provider.dart';
+import '../providers/bank_account_provider.dart';
+import '../models/bank_account.dart';
 import '../widgets/add_transaction.dart';
 import '../widgets/transaction_list.dart';
 import '../widgets/budget_summary.dart';
@@ -13,6 +17,7 @@ import '../widgets/recurring_expense_edit_dialog.dart';
 import '../widgets/loan_details_dialog.dart';
 import '../widgets/investment_list.dart';
 import '../widgets/add_investment.dart';
+import '../widgets/budget_adjustment_notification.dart';
 import '../services/supabase_service.dart';
 import 'ai_advice_screen.dart';
 import 'bank_connection_screen.dart';
@@ -26,6 +31,9 @@ import 'stock_market_screen.dart';
 import 'chat_rooms_screen.dart';
 import 'subscription_screen.dart';
 import 'profile_screen.dart';
+import 'accounts_screen.dart';
+import 'transfer_screen.dart';
+import 'transfer_history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -37,22 +45,58 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _showFooter = false;
+  bool _showBudgetAdjustmentNotification = false;
+  double _oldBudget = 0.0;
+  double _newBudget = 0.0;
+  String _aiExplanation = '';
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
+    _scrollController.addListener(() {
+      // Check if we're at the bottom of the list
+      if (_scrollController.position.pixels ==
+          _scrollController.position.maxScrollExtent) {
+        // Load more data
+      }
+    });
+
+    // Load user profile and bank accounts
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Load bank accounts
+      Provider.of<BankAccountProvider>(context, listen: false).loadAccounts();
+
+      // Check for budget adjustments after loading data
+      // final goalsProvider = Provider.of<GoalsProvider>(context, listen: false);
+      // goalsProvider.checkForBudgetAdjustmentNotification();
+    });
+
+    // Check for budget adjustment notifications on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final goalsProvider = Provider.of<GoalsProvider>(context, listen: false);
+      final budgetAdjustment = goalsProvider.getLastBudgetAdjustment();
+
+      if (budgetAdjustment != null && !budgetAdjustment.wasShown) {
+        setState(() {
+          _showBudgetAdjustmentNotification = true;
+          _oldBudget = budgetAdjustment.oldBudget;
+          _newBudget = budgetAdjustment.newBudget;
+          _aiExplanation = budgetAdjustment.explanation;
+        });
+        goalsProvider.markBudgetAdjustmentAsShown();
+      }
+    });
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 50) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 50) {
       if (!_showFooter) setState(() => _showFooter = true);
     } else {
       if (_showFooter) setState(() => _showFooter = false);
@@ -79,6 +123,47 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _showAdjustmentDetailsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          'Budget Adjustment Details',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'AI Explanation:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _aiExplanation,
+                style: const TextStyle(
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,7 +180,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 return Container(
                   width: double.infinity,
                   color: Colors.amber.shade50,
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   child: Row(
                     children: [
                       Icon(
@@ -145,6 +231,20 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             },
           ),
+
+          // Budget adjustment notification
+          if (_showBudgetAdjustmentNotification)
+            BudgetAdjustmentNotification(
+              oldBudget: _oldBudget,
+              newBudget: _newBudget,
+              onDetailsPressed: () => _showAdjustmentDetailsDialog(context),
+              onDismiss: () {
+                setState(() {
+                  _showBudgetAdjustmentNotification = false;
+                });
+              },
+            ),
+
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
@@ -164,15 +264,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         return Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           child: ElevatedButton(
-                            onPressed: isPremium 
-                                ? null 
+                            onPressed: isPremium
+                                ? null
                                 : () {
                                     Navigator.of(context).push(
-                                      MaterialPageRoute(builder: (_) => SubscriptionScreen()),
+                                      MaterialPageRoute(
+                                          builder: (_) => SubscriptionScreen()),
                                     );
                                   },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: isPremium ? Colors.green.shade700 : Colors.amber.shade700,
+                              backgroundColor: isPremium
+                                  ? Colors.green.shade700
+                                  : Colors.amber.shade700,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
@@ -183,10 +286,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(isPremium ? Icons.verified : Icons.workspace_premium, size: 24),
+                                Icon(
+                                    isPremium
+                                        ? Icons.verified
+                                        : Icons.workspace_premium,
+                                    size: 24),
                                 const SizedBox(width: 12),
                                 Text(
-                                  isPremium ? 'You are a Premium User' : 'Upgrade to Premium',
+                                  isPremium
+                                      ? 'You are a Premium User'
+                                      : 'Upgrade to Premium',
                                   style: GoogleFonts.poppins(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -224,7 +333,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     Consumer<FinanceProvider>(
                       builder: (context, financeData, _) {
-                        final recurringExpenses = financeData.getRecurringTransactions();
+                        final recurringExpenses =
+                            financeData.getRecurringTransactions();
                         if (recurringExpenses.isNotEmpty) {
                           return Container(
                             padding: const EdgeInsets.all(16.0),
@@ -240,25 +350,33 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 const SizedBox(height: 16),
                                 Container(
-                                  constraints: const BoxConstraints(maxHeight: 300),
+                                  constraints:
+                                      const BoxConstraints(maxHeight: 300),
                                   child: ListView.builder(
                                     shrinkWrap: true,
                                     physics: const ClampingScrollPhysics(),
                                     itemCount: recurringExpenses.take(3).length,
                                     itemBuilder: (context, index) {
                                       final expense = recurringExpenses[index];
-                                      final frequency = _normalizeFrequencyDisplay(expense.recurringFrequency);
-                                      final day = expense.recurringDay != null ? 
-                                                ' (Day ${expense.recurringDay})' : '';
+                                      final frequency =
+                                          _normalizeFrequencyDisplay(
+                                              expense.recurringFrequency);
+                                      final day = expense.recurringDay != null
+                                          ? ' (Day ${expense.recurringDay})'
+                                          : '';
                                       return Card(
                                         elevation: 2,
-                                        margin: const EdgeInsets.only(bottom: 8),
+                                        margin:
+                                            const EdgeInsets.only(bottom: 8),
                                         child: ListTile(
-                                          leading: const Icon(Icons.repeat, color: Colors.orange),
+                                          leading: const Icon(Icons.repeat,
+                                              color: Colors.orange),
                                           title: Text(expense.title),
                                           subtitle: Text(frequency + day),
                                           trailing: Text(
-                                            Provider.of<CurrencyProvider>(context, listen: false)
+                                            Provider.of<CurrencyProvider>(
+                                                    context,
+                                                    listen: false)
                                                 .formatAmount(expense.amount),
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
@@ -268,11 +386,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                           onTap: () {
                                             showDialog(
                                               context: context,
-                                              builder: (context) => RecurringExpenseEditDialog(
+                                              builder: (context) =>
+                                                  RecurringExpenseEditDialog(
                                                 expense: expense,
                                                 onDelete: (expense) {
-                                                  Provider.of<FinanceProvider>(context, listen: false)
-                                                      .deleteRecurringExpense(expense);
+                                                  Provider.of<FinanceProvider>(
+                                                          context,
+                                                          listen: false)
+                                                      .deleteRecurringExpense(
+                                                          expense);
                                                 },
                                               ),
                                             );
@@ -289,12 +411,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                       onPressed: () {
                                         Navigator.of(context).push(
                                           MaterialPageRoute(
-                                            builder: (context) => AllRecurringExpensesScreen(),
+                                            builder: (context) =>
+                                                AllRecurringExpensesScreen(),
                                           ),
                                         );
                                       },
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           Text(
                                             'View All Recurring Expenses',
@@ -304,7 +428,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                           ),
                                           const SizedBox(width: 4),
-                                          const Icon(Icons.arrow_forward, size: 20),
+                                          const Icon(Icons.arrow_forward,
+                                              size: 20),
                                         ],
                                       ),
                                     ),
@@ -332,9 +457,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     TransactionList(),
+
+                    // Add Bank Accounts Section
+                    _buildBankAccountsSection(),
+
                     // Footer
                     Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 24),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surface,
                         boxShadow: [
@@ -349,7 +479,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
@@ -360,7 +491,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               borderRadius: BorderRadius.circular(30),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withOpacity(0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -445,9 +579,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Consumer2<FinanceProvider, CurrencyProvider>(
-      builder: (ctx, financeData, currencyProvider, _) {
-        final totalBalance = financeData.getBalance();
+    return Consumer3<FinanceProvider, CurrencyProvider, BankAccountProvider>(
+      builder: (ctx, financeData, currencyProvider, bankAccountProvider, _) {
+        final totalBalance = bankAccountProvider.totalBalance;
         final totalExpenses = financeData.getTotalExpenses();
         final totalIncome = financeData.income;
         final transactionIncome = financeData.getTotalIncome();
@@ -519,7 +653,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => ProfileScreen()),
+                                MaterialPageRoute(
+                                    builder: (_) => ProfileScreen()),
                               );
                             },
                             child: Container(
@@ -529,11 +664,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                 shape: BoxShape.circle,
                               ),
                               child: FutureBuilder<Map<String, dynamic>?>(
-                                future: SupabaseService.getOrCreateCurrentUserProfile(),
+                                future: SupabaseService
+                                    .getOrCreateCurrentUserProfile(),
                                 builder: (context, snapshot) {
-                                  final fullName = snapshot.data?['full_name'] ?? 'U';
+                                  final fullName =
+                                      snapshot.data?['full_name'] ?? 'U';
                                   return Text(
-                                    fullName.isNotEmpty ? fullName[0].toUpperCase() : 'U',
+                                    fullName.isNotEmpty
+                                        ? fullName[0].toUpperCase()
+                                        : 'U',
                                     style: GoogleFonts.poppins(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -546,61 +685,75 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(width: 8),
                           IconButton(
-                            icon: const Icon(Icons.settings, color: Colors.white),
+                            icon:
+                                const Icon(Icons.settings, color: Colors.white),
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => SettingsScreen()),
+                                MaterialPageRoute(
+                                    builder: (_) => SettingsScreen()),
                               );
                             },
                             tooltip: 'Settings',
                           ),
                           IconButton(
                             icon: Icon(
-                              SupabaseService.isAuthenticated ? Icons.logout : Icons.login,
+                              SupabaseService.isAuthenticated
+                                  ? Icons.logout
+                                  : Icons.login,
                               color: Colors.white,
                             ),
                             onPressed: () async {
                               if (SupabaseService.isAuthenticated) {
                                 final shouldLogout = await showDialog<bool>(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: Text(
-                                      'Logout',
-                                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                                    ),
-                                    content: const Text('Are you sure you want to logout?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.of(context).pop(false),
-                                        child: const Text('Cancel'),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () => Navigator.of(context).pop(true),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.red,
-                                          foregroundColor: Colors.white,
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: Text(
+                                          'Logout',
+                                          style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w600),
                                         ),
-                                        child: const Text('Logout'),
+                                        content: const Text(
+                                            'Are you sure you want to logout?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.of(context)
+                                                    .pop(false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () =>
+                                                Navigator.of(context).pop(true),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                              foregroundColor: Colors.white,
+                                            ),
+                                            child: const Text('Logout'),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                ) ?? false;
+                                    ) ??
+                                    false;
 
                                 if (shouldLogout) {
                                   await SupabaseService.signOut();
                                   Navigator.of(context).pushAndRemoveUntil(
-                                    MaterialPageRoute(builder: (_) => AuthScreen()),
+                                    MaterialPageRoute(
+                                        builder: (_) => AuthScreen()),
                                     (route) => false,
                                   );
                                 }
                               } else {
                                 Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (_) => AuthScreen()),
+                                  MaterialPageRoute(
+                                      builder: (_) => AuthScreen()),
                                 );
                               }
                             },
-                            tooltip: SupabaseService.isAuthenticated ? 'Logout' : 'Login',
+                            tooltip: SupabaseService.isAuthenticated
+                                ? 'Logout'
+                                : 'Login',
                           ),
                         ],
                       ),
@@ -643,7 +796,8 @@ class _HomeScreenState extends State<HomeScreen> {
     Color iconColor,
   ) {
     return Container(
-      width: MediaQuery.of(context).size.width * 0.43, // Set a fixed width based on screen size
+      width: MediaQuery.of(context).size.width *
+          0.43, // Set a fixed width based on screen size
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.1),
@@ -664,7 +818,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(width: 10),
-          Expanded(  // Wrap in Expanded to prevent overflow
+          Expanded(
+            // Wrap in Expanded to prevent overflow
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -679,11 +834,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   amount,
                   style: GoogleFonts.poppins(
-                    fontSize: 14,  // Slightly smaller font size
+                    fontSize: 14, // Slightly smaller font size
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
-                  overflow: TextOverflow.ellipsis,  // Add ellipsis if text is too long
+                  overflow:
+                      TextOverflow.ellipsis, // Add ellipsis if text is too long
                 ),
               ],
             ),
@@ -788,14 +944,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     builder: (context) => LoanDetailsDialog(),
                   ).then((result) {
                     if (result != null) {
-                      final financeProvider = Provider.of<FinanceProvider>(context, listen: false);
-                      
+                      final financeProvider =
+                          Provider.of<FinanceProvider>(context, listen: false);
+
                       // Add loan amount to balance
                       financeProvider.addTransaction(result['loanTransaction']);
-                      
+
                       // Add recurring interest expense
                       financeProvider.addTransaction(result['interestExpense']);
-                      
+
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Loan added successfully!'),
@@ -933,5 +1090,252 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildBankAccountsSection() {
+    return Consumer<BankAccountProvider>(
+      builder: (ctx, bankAccountProvider, _) {
+        final accounts = bankAccountProvider.accounts;
+        final selectedAccount = bankAccountProvider.selectedAccount;
+        final totalBalance = bankAccountProvider.totalBalance;
+
+        return Card(
+          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          elevation: 2,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Bank Accounts',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.swap_horiz),
+                          tooltip: 'Transfer Money',
+                          onPressed: accounts.length >= 2
+                              ? () => Navigator.of(context)
+                                  .pushNamed(TransferScreen.routeName)
+                              : null,
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.history),
+                          tooltip: 'Transfer History',
+                          onPressed: () => Navigator.of(context)
+                              .pushNamed(TransferHistoryScreen.routeName),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                if (accounts.isEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.account_balance,
+                            size: 48, color: Colors.grey),
+                        SizedBox(height: 12),
+                        Text(
+                          'No accounts added yet',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () => Navigator.of(context)
+                              .pushNamed(AccountsScreen.routeName),
+                          icon: Icon(Icons.add),
+                          label: Text('Add Account'),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Column(
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Total Balance:',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            '\$${totalBalance.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      Container(
+                        height: 80,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: accounts.length > 3
+                              ? accounts.length + 1
+                              : accounts.length,
+                          itemBuilder: (ctx, index) {
+                            if (index == accounts.length) {
+                              // View All button at the end
+                              return Container(
+                                width: 100,
+                                margin: EdgeInsets.only(right: 8),
+                                child: OutlinedButton(
+                                  onPressed: () => Navigator.of(context)
+                                      .pushNamed(AccountsScreen.routeName),
+                                  child: Text('View All'),
+                                ),
+                              );
+                            }
+
+                            final account = accounts[index];
+                            return GestureDetector(
+                              onTap: () =>
+                                  bankAccountProvider.selectAccount(account.id),
+                              child: Container(
+                                width: 140,
+                                margin: EdgeInsets.only(right: 12),
+                                padding: EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: selectedAccount?.id == account.id
+                                      ? Theme.of(context)
+                                          .primaryColor
+                                          .withOpacity(0.1)
+                                      : Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: selectedAccount?.id == account.id
+                                        ? Theme.of(context).primaryColor
+                                        : Colors.grey[300]!,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          _getIconForAccountType(account.type),
+                                          size: 16,
+                                          color: _getColorForAccountType(
+                                              account.type),
+                                        ),
+                                        SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            account.name,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 13,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      '\$${account.balance.toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () => Navigator.of(context)
+                                .pushNamed(AccountsScreen.routeName),
+                            icon: Icon(Icons.account_balance),
+                            label: Text('Manage Accounts'),
+                            style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                            ),
+                          ),
+                          if (accounts.length >= 2)
+                            ElevatedButton.icon(
+                              onPressed: () => Navigator.of(context)
+                                  .pushNamed(TransferScreen.routeName),
+                              icon: Icon(Icons.swap_horiz),
+                              label: Text('Transfer'),
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  IconData _getIconForAccountType(BankAccountType type) {
+    switch (type) {
+      case BankAccountType.checking:
+        return Icons.account_balance;
+      case BankAccountType.savings:
+        return Icons.savings;
+      case BankAccountType.investment:
+        return Icons.trending_up;
+      case BankAccountType.credit:
+        return Icons.credit_card;
+      default:
+        return Icons.account_balance; // Default fallback
+    }
+  }
+
+  Color _getColorForAccountType(BankAccountType type) {
+    switch (type) {
+      case BankAccountType.checking:
+        return Colors.blue;
+      case BankAccountType.savings:
+        return Colors.green;
+      case BankAccountType.investment:
+        return Colors.purple;
+      case BankAccountType.credit:
+        return Colors.orange;
+      default:
+        return Colors.blue; // Default fallback
+    }
   }
 }

@@ -30,7 +30,7 @@ class FinanceProvider with ChangeNotifier {
     _income = prefs.getDouble('income') ?? 50000.0;
     _budget = prefs.getDouble('budget') ?? 40000.0;
     _savingsGoal = prefs.getDouble('savingsGoal') ?? 0;
-    
+
     final transactionsJson = prefs.getString('transactions');
     final investmentsJson = prefs.getString('investments');
     final loansJson = prefs.getString('loans');
@@ -44,22 +44,23 @@ class FinanceProvider with ChangeNotifier {
 
     if (investmentsJson != null) {
       final List<dynamic> decodedInvestments = jsonDecode(investmentsJson);
-      _investments = decodedInvestments
-          .map((item) => Investment.fromJson(item))
-          .toList();
+      _investments =
+          decodedInvestments.map((item) => Investment.fromJson(item)).toList();
     }
 
     if (loansJson != null) {
       _loans = jsonDecode(loansJson);
     }
-    
+
     notifyListeners();
   }
 
   Future<void> _saveData() async {
     final prefs = await SharedPreferences.getInstance();
-    final transactionsJson = jsonEncode(_transactions.map((tx) => tx.toJson()).toList());
-    final investmentsJson = jsonEncode(_investments.map((inv) => inv.toJson()).toList());
+    final transactionsJson =
+        jsonEncode(_transactions.map((tx) => tx.toJson()).toList());
+    final investmentsJson =
+        jsonEncode(_investments.map((inv) => inv.toJson()).toList());
     final loansJson = jsonEncode(_loans);
 
     await prefs.setString('transactions', transactionsJson);
@@ -77,9 +78,11 @@ class FinanceProvider with ChangeNotifier {
   }
 
   void updateBudget(double amount) {
+    print('FinanceProvider: Updating budget from $_budget to $amount');
     _budget = amount;
     _saveData();
     notifyListeners();
+    print('FinanceProvider: Budget updated successfully to $_budget');
   }
 
   void addTransaction(Transaction transaction) {
@@ -95,13 +98,12 @@ class FinanceProvider with ChangeNotifier {
   }
 
   Future<void> deleteRecurringExpense(Transaction transaction) async {
-    _transactions.removeWhere((tx) => 
-      tx.isRecurring &&
-      tx.title == transaction.title && 
-      tx.amount == transaction.amount && 
-      tx.recurringFrequency == transaction.recurringFrequency &&
-      tx.recurringDay == transaction.recurringDay
-    );
+    _transactions.removeWhere((tx) =>
+        tx.isRecurring &&
+        tx.title == transaction.title &&
+        tx.amount == transaction.amount &&
+        tx.recurringFrequency == transaction.recurringFrequency &&
+        tx.recurringDay == transaction.recurringDay);
     notifyListeners();
     await _saveData();
   }
@@ -117,7 +119,7 @@ class FinanceProvider with ChangeNotifier {
 
   void addInvestment(Investment investment) {
     _investments.add(investment);
-    
+
     // When adding an investment, deduct the amount from the balance
     // by adding a transaction for the investment
     final transaction = Transaction(
@@ -129,10 +131,10 @@ class FinanceProvider with ChangeNotifier {
       isIncome: false,
       isRecurring: false,
     );
-    
+
     // Add the transaction (this will affect the balance)
     addTransaction(transaction);
-    
+
     _saveData();
     notifyListeners();
   }
@@ -174,17 +176,14 @@ class FinanceProvider with ChangeNotifier {
   }
 
   List<Transaction> getRecentTransactions() {
-    final nonRecurringTransactions = _transactions
-        .where((tx) => !tx.isRecurring)
-        .toList();
+    final nonRecurringTransactions =
+        _transactions.where((tx) => !tx.isRecurring).toList();
     nonRecurringTransactions.sort((a, b) => b.date.compareTo(a.date));
     return nonRecurringTransactions.take(5).toList();
   }
 
   List<Transaction> getRecurringTransactions() {
-    return _transactions
-        .where((tx) => tx.isRecurring)
-        .toList();
+    return _transactions.where((tx) => tx.isRecurring).toList();
   }
 
   List<Investment> getRecentInvestments() {
@@ -199,25 +198,25 @@ class FinanceProvider with ChangeNotifier {
 
   Map<String, double> getCategoryTotals() {
     final Map<String, double> categoryTotals = {};
-    
+
     for (final transaction in _transactions) {
       final category = transaction.category;
       final amount = transaction.amount;
-      
+
       if (categoryTotals.containsKey(category)) {
         categoryTotals[category] = categoryTotals[category]! + amount;
       } else {
         categoryTotals[category] = amount;
       }
     }
-    
+
     return categoryTotals;
   }
 
   String getTopSpendingCategory() {
     final categoryTotals = getCategoryTotals();
     if (categoryTotals.isEmpty) return 'No data';
-    
+
     var topCategory = categoryTotals.entries.first;
     for (var entry in categoryTotals.entries) {
       if (entry.value > topCategory.value) {
@@ -229,20 +228,20 @@ class FinanceProvider with ChangeNotifier {
 
   double getAverageMonthlySpending() {
     if (_transactions.isEmpty) return 0;
-    
+
     final now = DateTime.now();
     final oneMonthAgo = DateTime(now.year, now.month - 1, now.day);
-    
-    final monthlyTransactions = _transactions
-        .where((tx) => tx.date.isAfter(oneMonthAgo))
-        .toList();
-    
+
+    final monthlyTransactions =
+        _transactions.where((tx) => tx.date.isAfter(oneMonthAgo)).toList();
+
     if (monthlyTransactions.isEmpty) return 0;
-    
+
     return monthlyTransactions.fold(
-      0.0,
-      (sum, tx) => sum + tx.amount,
-    ) / monthlyTransactions.length;
+          0.0,
+          (sum, tx) => sum + tx.amount,
+        ) /
+        monthlyTransactions.length;
   }
 
   double getRecurringExpensesTotal() {
@@ -251,7 +250,9 @@ class FinanceProvider with ChangeNotifier {
         .fold(0.0, (sum, tx) => sum + tx.amount);
   }
 
-  Future<String> getFinancialAdvice({String? specificQuestion, required CurrencyProvider currencyProvider}) async {
+  Future<String> getFinancialAdvice(
+      {String? specificQuestion,
+      required CurrencyProvider currencyProvider}) async {
     try {
       final advice = await _geminiService.getFinancialAdvice(
         income: _income,
@@ -267,7 +268,8 @@ class FinanceProvider with ChangeNotifier {
     }
   }
 
-  Future<String> getFinancialPredictions(CurrencyProvider currencyProvider) async {
+  Future<String> getFinancialPredictions(
+      CurrencyProvider currencyProvider) async {
     try {
       return await _geminiService.getFinancialPredictions(
         transactions: _transactions,
@@ -286,21 +288,24 @@ class FinanceProvider with ChangeNotifier {
     return prefix + currencyProvider.formatAmount(amount);
   }
 
-  String formatTransactionAmount(Transaction transaction, CurrencyProvider currencyProvider) {
+  String formatTransactionAmount(
+      Transaction transaction, CurrencyProvider currencyProvider) {
     final prefix = transaction.isIncome ? '+' : '-';
     final formattedAmount = currencyProvider.formatAmount(transaction.amount);
     return prefix + formattedAmount;
   }
 
-  String formatInvestmentAmount(Investment investment, CurrencyProvider currencyProvider) {
+  String formatInvestmentAmount(
+      Investment investment, CurrencyProvider currencyProvider) {
     return currencyProvider.formatAmount(investment.amount);
   }
 
   double parseAmount(String text, CurrencyProvider currencyProvider) {
-    final cleanText = text.replaceAll(currencyProvider.selectedSymbol, '')
-                         .replaceAll(',', '')
-                         .replaceAll(' ', '')
-                         .trim();
+    final cleanText = text
+        .replaceAll(currencyProvider.selectedSymbol, '')
+        .replaceAll(',', '')
+        .replaceAll(' ', '')
+        .trim();
     return double.tryParse(cleanText) ?? 0.0;
   }
 
@@ -308,15 +313,15 @@ class FinanceProvider with ChangeNotifier {
     // Find the investment to get its details
     final investment = _investments.firstWhere((inv) => inv.id == investmentId);
     final originalAmount = investment.amount;
-    
+
     // Calculate profit or loss
     final profitOrLoss = returnAmount - originalAmount;
     final isProfitable = profitOrLoss >= 0;
-    
+
     // Add a transaction for the profit/loss
     final transaction = Transaction(
       id: DateTime.now().toString(),
-      title: isProfitable 
+      title: isProfitable
           ? 'Profit: ${investment.title}'
           : 'Loss: ${investment.title}',
       amount: profitOrLoss.abs(), // Use absolute value for the amount
@@ -325,13 +330,13 @@ class FinanceProvider with ChangeNotifier {
       isIncome: isProfitable, // If profit, it's income; if loss, it's expense
       isRecurring: false,
     );
-    
+
     // Add the transaction
     addTransaction(transaction);
-    
+
     // Remove the investment from the list
     _investments.removeWhere((inv) => inv.id == investmentId);
-    
+
     // Save the updated data
     _saveData();
     notifyListeners();

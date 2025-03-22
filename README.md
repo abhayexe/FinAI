@@ -25,6 +25,18 @@ Below are some screenshots of the Finance AI (FinAI) application showcasing its 
     <td><img src="screenshots/ss11.jpeg" alt="Screenshot 11" width="200"></td>
     <td><img src="screenshots/ss12.jpeg" alt="Screenshot 12" width="200"></td>
   </tr>
+  <tr>
+    <td><img src="screenshots/ss13.jpeg" alt="Screenshot 13" width="200"></td>
+    <td><img src="screenshots/ss14.jpeg" alt="Screenshot 14" width="200"></td>
+    <td><img src="screenshots/ss15.jpeg" alt="Screenshot 15" width="200"></td>
+    <td><img src="screenshots/ss16.jpeg" alt="Screenshot 16" width="200"></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/ss17.jpeg" alt="Screenshot 17" width="200"></td>
+    <td><img src="screenshots/ss18.jpeg" alt="Screenshot 18" width="200"></td>
+    <td><img src="screenshots/ss19.jpeg" alt="Screenshot 19" width="200"></td>
+    <td><img src="screenshots/ss20.jpeg" alt="Screenshot 20" width="200"></td>
+  </tr>
 </table>
 
 ## Features
